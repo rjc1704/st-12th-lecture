@@ -9,7 +9,7 @@ export default function TodoForm({ fetchData }) {
     setTitle("");
     setContents("");
     await todoApi.post("/todos", {
-      id: Date.now(),
+      id: Date.now().toString(),
       title,
       contents,
       isCompleted: false,
