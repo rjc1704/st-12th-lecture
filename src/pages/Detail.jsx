@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { todoApi } from "../api/todos";
+import { getDetail, todoApi } from "../api/todos";
 
 export default function Detail() {
   const { id } = useParams();
@@ -8,11 +8,7 @@ export default function Detail() {
 
   const { data, isPending, error } = useQuery({
     queryKey: ["todos", id],
-    queryFn: async () => {
-      console.log("queryFn in Detail");
-      const response = await todoApi(`/todos/${id}`);
-      return response.data;
-    },
+    queryFn: getDetail,
   });
   console.log("data:", data);
 
