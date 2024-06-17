@@ -1,28 +1,38 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { todoApi } from "../api/todos";
+import { FaRegHeart, FaHeart } from "react-icons/fa";
 
 export default function TodoList() {
   const navigate = useNavigate();
 
   const {
-    isFetching,
+    isPending,
     error,
     data: todos,
-    refetch,
   } = useQuery({
     queryKey: ["todos"],
     queryFn: async () => {
       console.log("queryFn in Home");
       const response = await todoApi.get("/todos?_sort=-createdAt");
-      return response;
+      return response.data;
     },
-    select: (res) => res.data,
-    enabled: false,
   });
 
-  if (isFetching) {
+  const queryClient = useQueryClient();
+  const { mutate: handleLike } = useMutation({
+    mutationFn: ({ id, currentLiked }) =>
+      todoApi.patch(`/todos/${id}`, { liked: !currentLiked }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["todos"]);
+    },
+    onError: (err) => {
+      console.error(err);
+    },
+  });
+
+  if (isPending) {
     return (
       <div style={{ fontSize: 36 }}>
         <p>로딩중...</p>
@@ -38,9 +48,8 @@ export default function TodoList() {
   }
   return (
     <>
-      <button onClick={refetch}>투두리스트 refetch</button>
       <ul style={{ listStyle: "none", width: 250 }}>
-        {todos?.map((todo) => (
+        {todos.map((todo) => (
           <li
             key={todo.id}
             style={{
@@ -50,9 +59,26 @@ export default function TodoList() {
             }}
           >
             <h3>{todo.title}</h3>
-            <button onClick={() => navigate(`/detail/${todo.id}`)}>
-              내용보기
-            </button>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <button onClick={() => navigate(`/detail/${todo.id}`)}>
+                내용보기
+              </button>
+              {todo.liked ? (
+                <FaHeart
+                  onClick={() =>
+                    handleLike({ id: todo.id, currentLiked: todo.liked })
+                  }
+                  style={{ cursor: "pointer" }}
+                />
+              ) : (
+                <FaRegHeart
+                  onClick={() =>
+                    handleLike({ id: todo.id, currentLiked: todo.liked })
+                  }
+                  style={{ cursor: "pointer" }}
+                />
+              )}
+            </div>
           </li>
         ))}
       </ul>

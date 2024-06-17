@@ -23,6 +23,7 @@ export default function TodoForm() {
       title,
       contents,
       isCompleted: false,
+      liked: false,
       createdAt: Date.now(),
     });
     // await fetchData();
