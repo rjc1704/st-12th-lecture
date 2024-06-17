@@ -16,8 +16,9 @@ export default function TodoList() {
     queryFn: async () => {
       console.log("queryFn in Home");
       const response = await todoApi.get("/todos?_sort=-createdAt");
-      return response.data;
+      return response;
     },
+    select: (res) => res.data,
     enabled: false,
   });
 
