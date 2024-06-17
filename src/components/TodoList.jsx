@@ -24,11 +24,26 @@ export default function TodoList() {
   const { mutate: handleLike } = useMutation({
     mutationFn: ({ id, currentLiked }) =>
       todoApi.patch(`/todos/${id}`, { liked: !currentLiked }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["todos"]);
+    // onSuccess: () => {
+    //   queryClient.invalidateQueries(["todos"]);
+    // },
+    onMutate: async ({ id, currentLiked }) => {
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+
+      const previousTodos = queryClient.getQueryData(["todos"]);
+      queryClient.setQueryData(["todos"], (oldTodos) =>
+        oldTodos.map((todo) =>
+          todo.id === id ? { ...todo, liked: !currentLiked } : todo,
+        ),
+      );
+
+      return { previousTodos };
     },
-    onError: (err) => {
-      console.error(err);
+    onError: (err, _, context) => {
+      queryClient.setQueryData(["todos"], context.previousTodos);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(["todos"]);
     },
   });
 
