@@ -1,9 +1,11 @@
+import { forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function TodoItem({ todo }) {
+function TodoItem({ todo }, ref) {
   const navigate = useNavigate();
   return (
     <li
+      ref={ref}
       key={todo.id}
       style={{
         border: "1px solid black",
@@ -18,3 +20,5 @@ export default function TodoItem({ todo }) {
     </li>
   );
 }
+
+export default forwardRef(TodoItem);

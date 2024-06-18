@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
 import { todoApi } from "../api/todos";
 import TodoItem from "./TodoItem";
 
@@ -28,6 +29,15 @@ export default function TodoList() {
     select: ({ pages }) => pages.flat(),
   });
 
+  const { ref } = useInView({
+    threshold: 1,
+    onChange: (inView) => {
+      if (inView && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+  });
+
   if (isPending) {
     return (
       <div style={{ fontSize: 36 }}>
@@ -45,16 +55,14 @@ export default function TodoList() {
 
   return (
     <>
-      <ul style={{ listStyle: "none", width: 250 }}>
-        {todos.map((todo) => (
-          <TodoItem key={todo.id} todo={todo} />
-        ))}
+      <ul style={{ listStyle: "none", width: 250, backgroundColor: "beige" }}>
+        {todos.map((todo, idx) => {
+          const isLastItem = todos.length - 1 === idx;
+          return (
+            <TodoItem ref={isLastItem ? ref : null} key={todo.id} todo={todo} />
+          );
+        })}
       </ul>
-      {hasNextPage && (
-        <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-          {isFetchingNextPage ? "로딩중..." : "더보기"}
-        </button>
-      )}
     </>
   );
 }
