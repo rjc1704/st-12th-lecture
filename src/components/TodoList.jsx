@@ -1,25 +1,37 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { todoApi } from "../api/todos";
-import Pagination from "./Pagination";
 import TodoItem from "./TodoItem";
 
 const ITEMS_PER_PAGE = 4;
 
 export default function TodoList() {
-  const [page, setPage] = useState(1);
-
-  const { isPending, error, data } = useQuery({
-    queryKey: ["todos", page],
-    queryFn: async () => {
+  const {
+    data: todos,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isPending,
+    error,
+  } = useInfiniteQuery({
+    queryKey: ["todos"],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
       const response = await todoApi.get("/todos", {
-        params: { _page: page, _limit: ITEMS_PER_PAGE },
+        params: { _page: pageParam, _limit: ITEMS_PER_PAGE },
       });
       return {
         todos: response.data,
-        totalCount: response.headers["x-total-count"],
+        totalPages: Math.ceil(
+          response.headers["x-total-count"] / ITEMS_PER_PAGE,
+        ),
       };
     },
+    getNextPageParam: (lastPage, allPages, lastPageParam) => {
+      const nextPage = lastPageParam + 1;
+      return nextPage <= lastPage.totalPages ? nextPage : undefined;
+    },
+    select: ({ pages }) =>
+      pages.map((todosPerPage) => todosPerPage.todos).flat(),
   });
 
   if (isPending) {
@@ -37,16 +49,18 @@ export default function TodoList() {
     );
   }
 
-  const totalPages = Math.ceil(data.totalCount / ITEMS_PER_PAGE);
-
   return (
     <>
       <ul style={{ listStyle: "none", width: 250 }}>
-        {data.todos.map((todo) => (
-          <TodoItem todo={todo} />
+        {todos.map((todo) => (
+          <TodoItem key={todo.id} todo={todo} />
         ))}
       </ul>
-      <Pagination page={page} setPage={setPage} totalPages={totalPages} />
+      {hasNextPage && (
+        <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+          {isFetchingNextPage ? "로딩중..." : "더보기"}
+        </button>
+      )}
     </>
   );
 }
