@@ -19,19 +19,13 @@ export default function TodoList() {
       const response = await todoApi.get("/todos", {
         params: { _page: pageParam, _limit: ITEMS_PER_PAGE },
       });
-      return {
-        todos: response.data,
-        totalPages: Math.ceil(
-          response.headers["x-total-count"] / ITEMS_PER_PAGE,
-        ),
-      };
+      return response.data;
     },
     getNextPageParam: (lastPage, allPages, lastPageParam) => {
       const nextPage = lastPageParam + 1;
-      return nextPage <= lastPage.totalPages ? nextPage : undefined;
+      return lastPage.length === ITEMS_PER_PAGE ? nextPage : undefined;
     },
-    select: ({ pages }) =>
-      pages.map((todosPerPage) => todosPerPage.todos).flat(),
+    select: ({ pages }) => pages.flat(),
   });
 
   if (isPending) {
