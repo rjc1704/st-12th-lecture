@@ -43,7 +43,7 @@ export default function TodoList() {
     <>
       <ul style={{ listStyle: "none", width: 250 }}>
         {data.todos.map((todo) => (
-          <TodoItem todo={todo} />
+          <TodoItem key={todo.id} todo={todo} />
         ))}
       </ul>
       <Pagination page={page} setPage={setPage} totalPages={totalPages} />
